@@ -16,6 +16,9 @@ jobs:
 
     working_directory: ~/repo
 
+    environment:
+      CC_TEST_REPORTER_ID: 953af31ecf648686b3682f8c329046cdc3d0615b98704d90d24ac6214f771347
+
     steps:
       - checkout
 
@@ -32,7 +35,22 @@ jobs:
           paths:
             - ./vendor
           key: v1-dependencies-{{ checksum "composer.json" }}
-        
-      # run tests!
+
+      - run:
+        name: Setup Code Climate test-reporter
+        command: |
+        # download test reporter as a static binary
+          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+
       - run: composer lint
-      - run: composer test
+
+      - run:
+          name: Run tests
+          command: |
+            sudo docker-php-ext-enable xdebug
+          # notify Code Climate of a pending test report using `before-build`
+            ./cc-test-reporter before-build
+            composer test -- --coverage-clover clover.xml
+          # upload test report to Code Climate using `after-build`
+            ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
