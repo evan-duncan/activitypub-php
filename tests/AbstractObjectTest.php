@@ -18,4 +18,12 @@ class AbstractObjectTestCase extends TestCase
         $stub = $this->getMockForAbstractClass(AbstractObject::class);
         $this->assertEquals('', $stub->getId());
     }
+
+    public function testMustHaveType()
+    {
+        $type = "Order";
+        $stub = $this->getMockForAbstractClass(AbstractObject::class);
+        $stub->setType($type);
+        $this->assertEquals($type, $stub->getType());
+    }
 }
