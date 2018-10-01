@@ -6,51 +6,48 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
-      - image: circleci/php:7.1-browsers
-      
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mysql:9.4
+        # specify the version you desire here
+        - image: circleci/php:7.1-browsers
+        
+        # Specify service dependencies here if necessary
+        # CircleCI maintains a library of pre-built images
+        # documented at https://circleci.com/docs/2.0/circleci-images/
+        # - image: circleci/mysql:9.4
 
     working_directory: ~/repo
 
     environment:
-      CC_TEST_REPORTER_ID: 953af31ecf648686b3682f8c329046cdc3d0615b98704d90d24ac6214f771347
+        CC_TEST_REPORTER_ID: 953af31ecf648686b3682f8c329046cdc3d0615b98704d90d24ac6214f771347
 
     steps:
-      - checkout
+        - checkout
 
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "composer.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+        # Download and cache dependencies
+        - restore_cache:
+            keys:
+            - v1-dependencies-{{ checksum "composer.json" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
 
-      - run: composer install -n --prefer-dist
+        - run: composer install -n --prefer-dist
 
-      - save_cache:
-          paths:
+        - save_cache:
+            paths:
             - ./vendor
-          key: v1-dependencies-{{ checksum "composer.json" }}
+            key: v1-dependencies-{{ checksum "composer.json" }}
 
-      - run:
-        name: Setup Code Climate test-reporter
-        command: |
-        # download test reporter as a static binary
-          curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
+        - run:
+            name: Setup Code Climate test-reporter
+            command: |
+                curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+                chmod +x ./cc-test-reporter
 
-      - run: composer lint
+        - run: composer lint
 
-      - run:
-          name: Run tests
-          command: |
-            sudo docker-php-ext-enable xdebug
-          # notify Code Climate of a pending test report using `before-build`
-            ./cc-test-reporter before-build
-            composer test -- --coverage-clover clover.xml
-          # upload test report to Code Climate using `after-build`
-            ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
+        - run:
+            name: Run tests
+            command: |
+                sudo docker-php-ext-enable xdebug
+                ./cc-test-reporter before-build
+                composer test -- --coverage-clover clover.xml --whitelist src/
+                ./cc-test-reporter after-build --coverage-input-type clover --exit-code $?
